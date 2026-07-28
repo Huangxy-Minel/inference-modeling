@@ -1,0 +1,24 @@
+# DeepSeek-V3.2 decode on GB200, EP32 cluster (4 nodes x 8 GPUs).
+# Edit `parallel` / `workload` to sweep different deployment scenarios.
+
+gpu: GB200                # preset name; or inline {name, peak_tflops, bandwidth_gbs}
+model: deepseek-v3.2
+
+# Optional per-deployment overrides into the model's default_model_config.
+# E.g. lower DSA top-k, different KV dtype, etc.
+model_overrides:
+  dsa_topk: 2048
+
+parallel:
+  tp: 2
+  ep: 16
+  pp: 1
+  dp: 8
+
+workload:
+  phase: decode
+  batch_size: 128
+  context_length: 131072    # the V3.2 RL training context window example
+  new_tokens: 1
+  dtype_param: fp8
+  dtype_kv: mixed_bf16_fp8

@@ -1,0 +1,80 @@
+# ============================================================
+#  Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+develop-eggs/
+parts/
+pip-wheel-metadata/
+share/python-wheels/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================================
+#  Testing / type checking / linting
+# ============================================================
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.ruff_cache/
+
+# ============================================================
+#  IDE / editors
+# ============================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================
+#  Generated reports / scratch artifacts
+# ============================================================
+# Sweep scripts write their markdown reports under the parent `scripts/`
+# directory by convention; if you ever redirect output here, ignore them.
+*.md.bak
+/reports/
+/_scratch/
+/tmp/
+
+# ============================================================
+#  Project-specific
+# ============================================================
+# Persisted automations / plans (CodeBuddy / IDE assistants)
+.codebuddy/
+.workbuddy/
+
+# Per-machine config overrides
+local.yaml
+local.toml

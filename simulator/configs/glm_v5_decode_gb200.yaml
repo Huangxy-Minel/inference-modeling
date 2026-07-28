@@ -1,0 +1,37 @@
+# GLM-5 decode on GB200, EP16 cluster (2 nodes x 8 GPUs).
+# Edit `parallel` / `workload` to sweep different deployment scenarios.
+#
+# Layout mirrors `deepseek_v3.2_decode_gb200.yaml` for direct cross-model
+# comparability. Architectural specifics (asymmetric MLA with V head dim
+# = 256, n_h = 64, d_q_latent = 2048, indexer 32 heads, etc.) live in
+# `simulator/models/glm_v5.py::GLM5Estimator.default_model_config`.
+# See `docs/glm_v5.md` for the spec writeup.
+
+gpu: GB200                # preset name; or inline {name, peak_tflops, bandwidth_gbs}
+model: glm-5
+
+# Optional per-deployment overrides into the model's default_model_config.
+# E.g. lower DSA top-k, force value_head_dim=128 to ablate the asymmetric
+# MLA design, swap the expert_intermediate, etc.
+model_overrides:
+  dsa_topk: 2048
+
+parallel:
+  tp: 2
+  ep: 16
+  pp: 1
+  dp: 8
+
+workload:
+  phase: decode
+  batch_size: 128
+  context_length: 131072    # 128K — match the V3.2 reference deployment
+  new_tokens: 1
+  # Real GLM-5 deployment is W8A8 attn + W4A8 MoE expert; we use `fp8` here
+  # purely as a 1 B/elem placeholder so cross-model AI/MFU comparisons stay
+  # apples-to-apples with DSv3 / V3.2. The estimator itself ignores
+  # `dtype_param` and uses the FP8 constant baked into the helpers.
+  dtype_param: fp8
+  # GLM-5 KV cache shares DSv3.2's mixed-precision layout:
+  #   d_kv_latent (FP8) + d_h_rope (BF16) + d_idx (FP8).
+  dtype_kv: mixed_bf16_fp8

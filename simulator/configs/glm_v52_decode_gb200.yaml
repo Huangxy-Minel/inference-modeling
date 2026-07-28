@@ -1,0 +1,35 @@
+# GLM-5.2 decode on GB200, EP16 cluster (2 nodes x 8 GPUs).
+# GLM-5.2 = GLM-5 backbone + IndexShare (1 indexer / 4 layers) + wider
+# NoPE head_dim (192) + 1M context. See `docs/glm_v52.md`.
+#
+# Layout mirrors `glm_v5_decode_gb200.yaml` for direct cross-model
+# comparability. Architectural specifics live in
+# `simulator/models/glm_v52.py::GLM52Estimator.default_model_config`.
+
+gpu: GB200                # preset name; or inline {name, peak_tflops, bandwidth_gbs}
+model: glm-5.2
+
+# Optional per-deployment overrides into the model's default_model_config.
+# To ABLATE IndexShare (recover GLM-5-style per-layer indexer), set
+#   index_share_group: 1
+model_overrides:
+  dsa_topk: 2048
+  index_share_group: 4
+
+parallel:
+  tp: 2
+  ep: 16
+  pp: 1
+  dp: 8
+
+workload:
+  phase: decode
+  batch_size: 128
+  context_length: 131072    # 128K sample; bump toward 1048576 to see the
+                            # IndexShare FLOP-reduction regime dominate.
+  new_tokens: 1
+  # Real GLM-5.2 deployment: W8A8 attn + W4A8 MoE expert, FP8 KV-cache.
+  # We use `fp8` as a 1 B/elem placeholder for cross-model AI/MFU parity
+  # (the estimator ignores dtype_param and uses baked-in FP8 constants).
+  dtype_param: fp8
+  dtype_kv: mixed_bf16_fp8

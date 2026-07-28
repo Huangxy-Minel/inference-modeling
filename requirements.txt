@@ -1,0 +1,8 @@
+# inference-modeling — runtime dependencies
+#
+# The simulator is intentionally minimal:
+#   - numpy : roofline math (required)
+#   - pyyaml: only used by `--config` / `simulator.run_from_yaml`, but
+#             cheap and useful enough that we ship it by default.
+numpy>=1.21
+pyyaml>=6.0

@@ -1,0 +1,34 @@
+# DeepSeek-V4-Pro decode on GB200, EP32 cluster (4 nodes x 8 GPUs).
+# Edit `parallel` / `workload` to sweep different deployment scenarios.
+#
+# Run:
+#   python3 -m simulator --config simulator/configs/deepseek_v4pro_decode_gb200.yaml
+
+gpu: GB200                # preset name; or inline {name, peak_tflops, bandwidth_gbs}
+model: deepseek-v4-pro    # registered model name (see MODEL_REGISTRY)
+
+# Optional per-deployment overrides into the model's default_model_config.
+# V4-Pro defaults live in simulator/models/deepseek_v4.py::DeepSeekV4ProEstimator.
+# Common knobs to sweep here (uncomment / edit as needed):
+#   csa_topk                : top-k tokens per CSA layer (default 1024)
+#   csa_compress_m          : CSA compression ratio m (default 4)
+#   hca_compress_m          : HCA compression ratio m' (default 128)
+#   swa_window              : sliding-window size n_win (default 128)
+#   top_k_experts           : MoE routing top-k (default 6)
+#   indexer_head_dim        : c_I (default 128)
+model_overrides:
+  csa_topk: 1024
+
+parallel:
+  tp: 2
+  ep: 16                   # decode-switching layout: DP × TP == EP
+  pp: 1
+  dp: 8
+
+workload:
+  phase: decode
+  batch_size: 128          # per-DP batch size (NOT cluster-wide)
+  context_length: 131072   # 256K — V4-Pro's KV ≈ 10% of V3.2 shines at long ctx
+  new_tokens: 1
+  dtype_param: fp8
+  dtype_kv: mixed_bf16_fp8

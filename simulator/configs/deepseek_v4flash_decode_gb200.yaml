@@ -1,0 +1,37 @@
+# DeepSeek-V4-Flash decode on GB200, EP16 cluster (2 nodes x 8 GPUs).
+# Edit `parallel` / `workload` to sweep different deployment scenarios.
+#
+# Run:
+#   python3 -m simulator --config simulator/configs/deepseek_v4flash_decode_gb200.yaml
+
+gpu: GB200                  # preset name; or inline {name, peak_tflops, bandwidth_gbs}
+model: deepseek-v4-flash    # registered model name (see MODEL_REGISTRY)
+
+# Optional per-deployment overrides into the model's default_model_config.
+# V4-Flash defaults live in simulator/models/deepseek_v4.py::DeepSeekV4FlashEstimator.
+# Key differences vs V4-Pro:
+#   43 layers (vs 61), hidden=4096 (vs 7168), 256 routed experts (vs 384),
+#   csa_topk=512 (vs 1024), expert_intermediate=2048 (vs 3072),
+#   first 2 layers are pure SWA (vs HCA).
+# Common knobs to sweep here (uncomment / edit as needed):
+#   csa_topk                : top-k tokens per CSA layer (default 512)
+#   csa_compress_m          : CSA compression ratio m (default 4)
+#   hca_compress_m          : HCA compression ratio m' (default 128)
+#   swa_window              : sliding-window size n_win (default 128)
+#   top_k_experts           : MoE routing top-k (default 6)
+#   indexer_head_dim        : c_I (default 128)
+model_overrides: {}
+
+parallel:
+  tp: 2
+  ep: 16                   # decode-switching layout: DP × TP == EP
+  pp: 1
+  dp: 8
+
+workload:
+  phase: decode
+  batch_size: 128          # per-DP batch size (NOT cluster-wide)
+  context_length: 131072   # 128K — V4-Flash KV ≈ 7% of V3.2, great for long ctx
+  new_tokens: 1
+  dtype_param: fp8
+  dtype_kv: mixed_bf16_fp8
